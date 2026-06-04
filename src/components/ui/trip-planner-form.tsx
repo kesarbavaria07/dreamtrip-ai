@@ -80,10 +80,10 @@ export default function TripPlannerForm({
   const watchedValues = watch();
 
   const handleFormSubmit: SubmitHandler<TripPlannerFormData> = async (data) => {
+    console.log("[Form] Form submitted with data:", data);
+    console.log("[Form] All watched values:", watchedValues);
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
       onSubmit?.(data);
     } finally {
       setIsSubmitting(false);
@@ -158,7 +158,10 @@ export default function TripPlannerForm({
             <button
               key={option.value}
               type="button"
-              onClick={() => setValue("budget", option.value as TripPlannerFormData["budget"], { shouldValidate: true })}
+              onClick={() => {
+                console.log("[Form] Setting budget:", option.value);
+                setValue("budget", option.value as TripPlannerFormData["budget"], { shouldValidate: true });
+              }}
               className={`
                 p-4 rounded-xl border text-left transition-all
                 ${watchedValues.budget === option.value
@@ -213,7 +216,10 @@ export default function TripPlannerForm({
             <button
               key={option.value}
               type="button"
-              onClick={() => setValue("travelStyle", option.value as TripPlannerFormData["travelStyle"], { shouldValidate: true })}
+              onClick={() => {
+                console.log("[Form] Setting travel style:", option.value);
+                setValue("travelStyle", option.value as TripPlannerFormData["travelStyle"], { shouldValidate: true });
+              }}
               className={`
                 p-4 rounded-xl border text-center transition-all
                 ${watchedValues.travelStyle === option.value
@@ -227,7 +233,6 @@ export default function TripPlannerForm({
             </button>
           ))}
         </div>
-        <input type="hidden" {...register("travelStyle")} />
         {errors.travelStyle && (
           <p className="text-red-400 text-sm">{errors.travelStyle.message}</p>
         )}
