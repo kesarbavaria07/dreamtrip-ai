@@ -1,0 +1,246 @@
+// DreamTrip AI - Prisma Schema
+// Database: PostgreSQL via Supabase
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ================================
+// USER & AUTHENTICATION
+// ================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  avatar        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  preferences   UserPreferences?
+  tripPlans     TripPlan[]
+  stories       TravelStory[]
+
+  @@map("users")
+}
+
+// ================================
+// USER PREFERENCES
+// ================================
+
+model UserPreferences {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Travel Preferences
+  defaultBudget     BudgetLevel @default(moderate)
+  defaultTravelStyle TravelStyle @default(cultural)
+  preferredDestinations String[] @default([])
+  dietaryRestrictions String[]  @default([])
+  mobilityRequirements String?
+
+  // System Preferences
+  language          String    @default("en")
+  currency          String    @default("USD")
+  timezone          String    @default("UTC")
+
+  // Notifications
+  emailNotifications Boolean  @default(true)
+  pushNotifications  Boolean  @default(true)
+  smsNotifications   Boolean  @default(false)
+
+  // AI Settings
+  aiPersonalization  Boolean  @default(true)
+  travelHistoryEnabled Boolean @default(true)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("user_preferences")
+}
+
+// ================================
+// TRIP PLANS
+// ================================
+
+model TripPlan {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Basic Info
+  title         String
+  description   String?
+  status        TripStatus @default(planning)
+  coverImage    String?
+
+  // Destination
+  destinationName String
+  destinationCountry String?
+  destinationCity String?
+
+  // Dates
+  startDate     DateTime
+  endDate       DateTime
+  totalDays     Int
+
+  // Budget
+  totalBudget   Float     @default(0)
+  currency      String    @default("USD")
+
+  // Planning Details (JSON)
+  itinerary     Json?     // ItineraryDay[]
+  hotels        Json?     // HotelReservation[]
+  flights       Json?     // FlightBooking[]
+  activities    Json?     // Activity[]
+  budgetBreakdown Json?   // BudgetBreakdown
+
+  // Preferences Used
+  travelStyle   TravelStyle @default(cultural)
+  travelerCount Json?       // TravelerCount
+
+  // Meta
+  aiGenerated   Boolean   @default(true)
+  tags          String[]  @default([])
+  isPublic      Boolean   @default(false)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  days          TripDay[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([startDate])
+  @@map("trip_plans")
+}
+
+// ================================
+// TRIP DAYS (Denormalized for querying)
+// ================================
+
+model TripDay {
+  id          String    @id @default(cuid())
+  tripPlanId  String
+  tripPlan    TripPlan  @relation(fields: [tripPlanId], references: [id], onDelete: Cascade)
+
+  dayNumber   Int
+  date        DateTime
+  title       String
+  summary     String?
+  highlights  String[]  @default([])
+  tips        String[]  @default([])
+  weather     Json?     // WeatherForecast
+
+  activities  Json?     // Activity[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([tripPlanId])
+  @@map("trip_days")
+}
+
+// ================================
+// TRAVEL STORIES
+// ================================
+
+model TravelStory {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tripPlanId  String?
+
+  title       String
+  content     String   @db.VarChar(65000)
+  coverImage  String?
+  
+  // Metadata
+  location    String?
+  travelDate  DateTime?
+  tags        String[]  @default([])
+  isDraft     Boolean   @default(false)
+  isPublished Boolean   @default(false)
+
+  // Stats
+  viewCount   Int       @default(0)
+  likeCount   Int       @default(0)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([tripPlanId])
+  @@map("travel_stories")
+}
+
+// ================================
+// ENUMS
+// ================================
+
+enum BudgetLevel {
+  budget
+  moderate
+  premium
+  luxury
+}
+
+enum TravelStyle {
+  adventure
+  relaxation
+  cultural
+  culinary
+  romantic
+  family
+  luxury
+}
+
+enum TripStatus {
+  planning
+  confirmed
+  in_progress
+  completed
+  cancelled
+}
+
+// ================================
+// ADDITIONAL TABLES (Future)
+// ================================
+
+// BudgetAlerts (can be extended)
+model BudgetAlert {
+  id          String    @id @default(cuid())
+  tripPlanId  String
+  tripPlan    TripPlan  @relation(fields: [tripPlanId], references: [id], onDelete: Cascade)
+
+  type        String    // warning, exceeded, tip
+  category    String
+  message     String
+  amount      Float?
+
+  createdAt   DateTime  @default(now())
+
+  @@index([tripPlanId])
+  @@map("budget_alerts")
+}
+
+// User Sessions (for auth tracking)
+model UserSession {
+  id          String    @id @default(cuid())
+  userId      String
+  token       String    @unique
+  expiresAt   DateTime
+
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+  @@map("user_sessions")
+}

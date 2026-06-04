@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "entity": "Destination",
+  "description": "Represents travel destinations worldwide",
+  "version": "1.0.0",
+
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for the destination"
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Destination name"
+    },
+    "country": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Country name"
+    },
+    "region": {
+      "type": "string",
+      "enum": ["Africa", "Asia", "Caribbean", "Central America", "Europe", "Middle East", "North America", "Oceania", "South America"],
+      "description": "Geographic region"
+    },
+    "city": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Primary city"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "AI-generated description"
+    },
+    "imageUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "Hero image URL"
+    },
+    "coordinates": {
+      "type": "object",
+      "properties": {
+        "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
+        "longitude": { "type": "number", "minimum": -180, "maximum": 180 }
+      }
+    },
+    "timezone": {
+      "type": "string",
+      "description": "IANA timezone identifier"
+    },
+    "continent": {
+      "type": "string",
+      "enum": ["Africa", "Antarctica", "Asia", "Europe", "North America", "Oceania", "South America"]
+    },
+    "climate": {
+      "type": "string",
+      "enum": ["tropical", "dry", "temperate", "continental", "polar", "arid", "mediterranean"]
+    },
+    "avgTemperature": {
+      "type": "object",
+      "properties": {
+        "spring": { "type": "number", "description": "Celsius" },
+        "summer": { "type": "number", "description": "Celsius" },
+        "fall": { "type": "number", "description": "Celsius" },
+        "winter": { "type": "number", "description": "Celsius" }
+      }
+    },
+    "bestTimeToVisit": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "month": { "type": "string" },
+          "description": { "type": "string" },
+          "crowdLevel": { "type": "string", "enum": ["low", "medium", "high"] }
+        }
+      }
+    },
+    "attributes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Keywords for matching: beach, cultural, adventure, family-friendly"
+    },
+    "safetyLevel": {
+      "type": "string",
+      "enum": ["very_safe", "safe", "moderate", "caution", "unsafe"],
+      "description": "Safety assessment"
+    },
+    "visaRequirements": {
+      "type": "string",
+      "description": "Visa requirement summary"
+    },
+    "language": {
+      "type": "string",
+      "description": "Primary language"
+    },
+    "currency": {
+      "type": "string",
+      "description": "Local currency code (ISO 4217)"
+    },
+    "costLevel": {
+      "type": "string",
+      "enum": ["low", "medium", "high"],
+      "description": "Cost of living index"
+    },
+    "estimatedDailyCost": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Estimated daily cost in USD"
+    },
+    "popularityScore": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Real-time popularity metric"
+    },
+    "matchScore": {
+      "type": "object",
+      "description": "Pre-computed style compatibility scores",
+      "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+    }
+  },
+
+  "relationships": [
+    {
+      "type": "VISITED_BY",
+      "source": "Traveler",
+      "cardinality": "many-to-many",
+      "properties": {
+        "visitCount": { "type": "integer" },
+        "lastVisit": { "type": "string", "format": "date-time" }
+      }
+    },
+    {
+      "type": "HAS",
+      "target": "Activity",
+      "cardinality": "one-to-many",
+      "properties": {
+        "activityCount": { "type": "integer" },
+        "isSignature": { "type": "boolean" },
+        "recommendedDuration": { "type": "integer", "description": "hours" },
+        "distanceFromCenter": { "type": "number", "description": "km" }
+      }
+    },
+    {
+      "type": "HAS",
+      "target": "Hotel",
+      "cardinality": "one-to-many",
+      "properties": {
+        "hotelCount": { "type": "integer" },
+        "avgRating": { "type": "number", "minimum": 0, "maximum": 5 },
+        "priceRangeMin": { "type": "number" },
+        "priceRangeMax": { "type": "number" },
+        "isRecommended": { "type": "boolean" }
+      }
+    },
+    {
+      "type": "CONNECTED_TO",
+      "target": "Destination",
+      "cardinality": "many-to-many",
+      "description": "Nearby or related destinations"
+    }
+  ],
+
+  "indexes": ["id", "country", "region", "name"],
+
+  "rls": {
+    "select": true,
+    "insert": false,
+    "update": false,
+    "delete": false
+  }
+}

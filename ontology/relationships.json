@@ -1,0 +1,462 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Fabric IQ Knowledge Graph Relationships for DreamTrip AI",
+  "version": "1.0.0",
+
+  "relationships": [
+    {
+      "id": "PREFERS",
+      "from": "Traveler",
+      "to": "Destination",
+      "type": "preference",
+      "cardinality": "many-to-many",
+      "description": "Represents a traveler's preference for a destination",
+      "direction": "outgoing",
+      "properties": {
+        "preferenceLevel": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Confidence score of this preference"
+        },
+        "visitCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of times user visited"
+        },
+        "lastVisitDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Most recent visit"
+        },
+        "isDreamDestination": {
+          "type": "boolean",
+          "description": "On user's bucket list"
+        },
+        "bucketListRank": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Position in wishlist"
+        },
+        "intentScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Likelihood of booking (ML predicted)"
+        },
+        "seasonalPreference": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Preferred travel seasons"
+        },
+        "budgetAlignment": {
+          "type": "string",
+          "enum": ["budget", "moderate", "premium", "luxury"],
+          "description": "How well destination fits user's budget"
+        }
+      },
+      "weight": 0.35,
+      "inferenceRules": [
+        "IF Traveler.PREFERS.high_score AND Traveler.travelStyle = 'adventure' THEN recommend AdventureActivities",
+        "IF Traveler.PREFERS.low_score AND Traveler.budget = 'budget' THEN filter_by_cost",
+        "IF Traveler.PREFERS.isDreamDestination THEN boost_in_recommendations"
+      ]
+    },
+    {
+      "id": "HAS",
+      "from": "Destination",
+      "to": "Activity",
+      "type": "containment",
+      "cardinality": "one-to-many",
+      "description": "Represents activities available at a destination",
+      "direction": "outgoing",
+      "properties": {
+        "activityCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total activities at destination"
+        },
+        "isSignature": {
+          "type": "boolean",
+          "description": "Famous/landmark activity"
+        },
+        "isRecommended": {
+          "type": "boolean",
+          "description": "Curated recommendation"
+        },
+        "recommendedDuration": {
+          "type": "integer",
+          "description": "Ideal time in hours"
+        },
+        "distanceFromCenter": {
+          "type": "number",
+          "description": "Distance from city center in km"
+        },
+        "includedInTripPlans": {
+          "type": "integer",
+          "description": "Popularity metric"
+        },
+        "avgRating": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Aggregate visitor rating"
+        },
+        "bestSeason": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Optimal seasons for this activity"
+        }
+      },
+      "weight": 0.30,
+      "inferenceRules": [
+        "IF Destination.HAS.Activity AND Activity.type = 'sightseeing' THEN add_to_itinerary",
+        "IF Destination.HAS.Activity AND Activity.bookingRequired THEN include_booking_info",
+        "IF Destination.HAS.Activity AND Activity.isSignature THEN prioritize_in_recommendations"
+      ]
+    },
+    {
+      "id": "HAS",
+      "from": "Destination",
+      "to": "Hotel",
+      "type": "containment",
+      "cardinality": "one-to-many",
+      "description": "Represents hotels available at a destination",
+      "direction": "outgoing",
+      "properties": {
+        "hotelCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total hotels at destination"
+        },
+        "avgRating": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Aggregate hotel quality"
+        },
+        "priceRangeMin": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Cheapest option per night"
+        },
+        "priceRangeMax": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Most expensive option per night"
+        },
+        "isRecommended": {
+          "type": "boolean",
+          "description": "Editor-curated selection"
+        },
+        "distanceFromCenter": {
+          "type": "number",
+          "description": "Distance from main attractions in km"
+        },
+        "availabilityRate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Current availability percentage"
+        }
+      },
+      "weight": 0.25,
+      "inferenceRules": [
+        "IF Destination.HAS.Hotel AND Hotel.pricePerNight <= Budget.dailyAmount THEN include_in_options",
+        "IF Destination.HAS.Hotel AND Hotel.rating >= 4.0 THEN boost_in_rankings",
+        "IF Destination.HAS.Hotel AND Hotel.distanceFromCenter < 2 THEN recommend_for_walking"
+      ]
+    },
+    {
+      "id": "SUITABLE_FOR",
+      "from": "Activity",
+      "to": "TravelStyle",
+      "type": "compatibility",
+      "cardinality": "many-to-many",
+      "description": "Maps activities to suitable travel styles",
+      "direction": "undirected",
+      "properties": {
+        "suitabilityScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "How well this activity fits the style"
+        },
+        "reasonText": {
+          "type": "string",
+          "description": "Natural language explanation"
+        },
+        "bestForGroupSize": {
+          "type": "string",
+          "enum": ["solo", "couple", "small_group", "large_group", "any"],
+          "description": "Ideal group size"
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Ranking within the style category"
+        },
+        "alternatives": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Similar activities if unavailable"
+        }
+      },
+      "weight": 0.20,
+      "inferenceRules": [
+        "IF Activity.SUITABLE_FOR.travelStyle AND suitabilityScore > 0.7 THEN include_in_itinerary",
+        "IF Activity.SUITABLE_FOR.travelStyle AND priority < 5 THEN feature_in_recommendations",
+        "IF Activity.SUITABLE_FOR.travelStyle = 'family' THEN verify_child_friendly"
+      ]
+    },
+    {
+      "id": "BOOKED",
+      "from": "Traveler",
+      "to": "TripPlan",
+      "type": "ownership",
+      "cardinality": "one-to-many",
+      "description": "Links travelers to their trip plans",
+      "direction": "outgoing",
+      "properties": {
+        "bookingDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["planning", "confirmed", "completed", "cancelled"]
+        },
+        "totalCost": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "weight": 0.15
+    },
+    {
+      "id": "ALLOCATED",
+      "from": "Budget",
+      "to": "TripPlan",
+      "type": "financial",
+      "cardinality": "one-to-one",
+      "description": "Budget allocation for a trip plan",
+      "direction": "outgoing",
+      "properties": {
+        "totalAmount": {
+          "type": "number",
+          "minimum": 0
+        },
+        "dailyAmount": {
+          "type": "number",
+          "minimum": 0
+        },
+        "allocationPercentages": {
+          "type": "object",
+          "properties": {
+            "accommodation": { "type": "number" },
+            "activities": { "type": "number" },
+            "dining": { "type": "number" },
+            "transport": { "type": "number" },
+            "contingency": { "type": "number" }
+          }
+        }
+      },
+      "weight": 0.10
+    },
+    {
+      "id": "CREATED",
+      "from": "Traveler",
+      "to": "TravelStory",
+      "type": "ownership",
+      "cardinality": "one-to-many",
+      "description": "Links travelers to their travel stories",
+      "direction": "outgoing",
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "publishedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "isDraft": {
+          "type": "boolean"
+        }
+      },
+      "weight": 0.05
+    }
+  ],
+
+  "enums": {
+    "TravelStyle": {
+      "description": "Travel style categories",
+      "values": [
+        {
+          "name": "adventure",
+          "aliases": ["adventurous", "active", "thrilling"],
+          "activities": ["hiking", "diving", "safari", "climbing"]
+        },
+        {
+          "name": "relaxation",
+          "aliases": ["relaxing", "spa", "wellness", "beach"],
+          "activities": ["spa", "beach", "yoga", "meditation"]
+        },
+        {
+          "name": "cultural",
+          "aliases": ["cultural", "heritage", "historic"],
+          "activities": ["museum", "temple", "historic", "art"]
+        },
+        {
+          "name": "culinary",
+          "aliases": ["foodie", "gastronomic", "food"],
+          "activities": ["cooking", "tasting", "market", "restaurant"]
+        },
+        {
+          "name": "romantic",
+          "aliases": ["romantic", "couple", "honeymoon"],
+          "activities": ["dinner", "sunset", "couples_spa"]
+        },
+        {
+          "name": "family",
+          "aliases": ["family", "kid_friendly", "kids"],
+          "activities": ["theme_park", "zoo", "beach", "nature"]
+        },
+        {
+          "name": "luxury",
+          "aliases": ["luxury", "premium", "upscale"],
+          "activities": ["spa", "fine_dining", "private_tour", "yacht"]
+        }
+      ]
+    },
+    "ActivityType": {
+      "description": "Activity type categories",
+      "values": [
+        "sightseeing",
+        "dining",
+        "adventure",
+        "shopping",
+        "wellness",
+        "nightlife",
+        "transport",
+        "museum",
+        "nature",
+        "other"
+      ]
+    },
+    "BudgetLevel": {
+      "description": "Budget level categories",
+      "values": [
+        {
+          "name": "budget",
+          "dailyRange": [30, 100],
+          "description": "Budget-conscious travelers"
+        },
+        {
+          "name": "moderate",
+          "dailyRange": [100, 250],
+          "description": "Value-focused travelers"
+        },
+        {
+          "name": "premium",
+          "dailyRange": [250, 500],
+          "description": "Quality-seeking travelers"
+        },
+        {
+          "name": "luxury",
+          "dailyRange": [500, 2000],
+          "description": "Luxury travelers"
+        }
+      ]
+    }
+  },
+
+  "inferenceEngine": {
+    "rules": [
+      {
+        "id": "RULE_001",
+        "name": "Adventure Traveler Recommendation",
+        "condition": "Traveler.travelStyle CONTAINS 'adventure'",
+        "action": "BOOST Destination WHERE Destination.attributes CONTAINS 'adventure'",
+        "confidence": 0.95
+      },
+      {
+        "id": "RULE_002",
+        "name": "Budget Match",
+        "condition": "Budget.level = 'moderate'",
+        "action": "FILTER Activity WHERE Activity.priceRange.max <= Budget.dailyAmount * 0.3",
+        "confidence": 0.90
+      },
+      {
+        "id": "RULE_003",
+        "name": "Seasonal Suitability",
+        "condition": "TravelPlan.startDate IN Destination.bestTimeToVisit",
+        "action": "BOOST Destination.score + 10",
+        "confidence": 0.85
+      },
+      {
+        "id": "RULE_004",
+        "name": "Family-Friendly Filter",
+        "condition": "Traveler.travelStyle = 'family'",
+        "action": "FILTER Activity WHERE Activity.ageSuitability.min <= 5",
+        "confidence": 0.92
+      },
+      {
+        "id": "RULE_005",
+        "name": "Similar Traveler Boost",
+        "condition": "Traveler.similarityCluster IS NOT NULL",
+        "action": "BOOST Destination WHERE Traveler.similarityCluster = OTHER_TRAVELER.similarityCluster AND OTHER_TRAVELER.PREFERS.high_score",
+        "confidence": 0.88
+      }
+    ]
+  },
+
+  "scoringAlgorithm": {
+    "description": "Multi-factor scoring for recommendations",
+    "factors": [
+      {
+        "name": "budgetMatch",
+        "weight": 0.35,
+        "formula": "1 - ABS(Activity.priceRange.avg - Budget.dailyAmount * 0.3) / Budget.dailyAmount",
+        "min": 0,
+        "max": 1
+      },
+      {
+        "name": "styleMatch",
+        "weight": 0.30,
+        "formula": "Activity.SUITABLE_FOR[TravelStyle].suitabilityScore",
+        "min": 0,
+        "max": 1
+      },
+      {
+        "name": "durationFit",
+        "weight": 0.15,
+        "formula": "1 - ABS(Activity.duration.typical - OptimalDuration) / OptimalDuration",
+        "min": 0,
+        "max": 1
+      },
+      {
+        "name": "seasonMatch",
+        "weight": 0.10,
+        "formula": "IF TravelPlan.season IN Activity.bestSeason THEN 1 ELSE 0.3",
+        "min": 0.3,
+        "max": 1
+      },
+      {
+        "name": "ratingBoost",
+        "weight": 0.05,
+        "formula": "Activity.rating / 5",
+        "min": 0,
+        "max": 1
+      },
+      {
+        "name": "preferenceBoost",
+        "weight": 0.05,
+        "formula": "Traveler.PREFERS[Destination].preferenceLevel",
+        "min": 0,
+        "max": 1
+      }
+    ],
+    "totalFormula": "SUM(factor_i * weight_i) FOR i IN factors"
+  }
+}

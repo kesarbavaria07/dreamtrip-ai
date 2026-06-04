@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "entity": "Activity",
+  "description": "Represents activities and experiences at destinations",
+  "version": "1.0.0",
+
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for the activity"
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Activity name"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Detailed description"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["sightseeing", "dining", "adventure", "shopping", "wellness", "nightlife", "transport", "museum", "nature", "other"],
+      "description": "Primary activity type"
+    },
+    "category": {
+      "type": "string",
+      "description": "Sub-category"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Searchable tags"
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "coordinates": {
+          "type": "object",
+          "properties": {
+            "latitude": { "type": "number" },
+            "longitude": { "type": "number" }
+          }
+        },
+        "address": { "type": "string" },
+        "city": { "type": "string" },
+        "country": { "type": "string" }
+      }
+    },
+    "duration": {
+      "type": "object",
+      "properties": {
+        "min": { "type": "integer", "description": "Minimum minutes" },
+        "max": { "type": "integer", "description": "Maximum minutes" },
+        "typical": { "type": "integer", "description": "Typical minutes" }
+      }
+    },
+    "priceRange": {
+      "type": "object",
+      "properties": {
+        "min": { "type": "number", "minimum": 0 },
+        "max": { "type": "number", "minimum": 0 },
+        "currency": { "type": "string", "default": "USD" }
+      }
+    },
+    "bookingRequired": {
+      "type": "boolean",
+      "default": false
+    },
+    "cancellationPolicy": {
+      "type": "string",
+      "description": "Cancellation terms"
+    },
+    "rating": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 5,
+      "description": "Average visitor rating"
+    },
+    "reviewCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total number of reviews"
+    },
+    "ageSuitability": {
+      "type": "object",
+      "properties": {
+        "min": { "type": "integer", "minimum": 0 },
+        "max": { "type": "integer", "maximum": 120 }
+      }
+    },
+    "fitnessLevel": {
+      "type": "string",
+      "enum": ["easy", "moderate", "challenging"],
+      "description": "Physical requirements"
+    },
+    "accessibility": {
+      "type": "object",
+      "properties": {
+        "wheelchairAccessible": { "type": "boolean" },
+        "hearingAccessible": { "type": "boolean" },
+        "visualAccessible": { "type": "boolean" }
+      }
+    },
+    "weatherDependency": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Weather conditions required: sunny, cloudy, etc."
+    },
+    "provider": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "rating": { "type": "number", "minimum": 0, "maximum": 5 }
+      }
+    },
+    "images": {
+      "type": "array",
+      "items": { "type": "string", "format": "uri" },
+      "description": "Activity images"
+    },
+    "suitabilityScores": {
+      "type": "object",
+      "description": "Pre-computed suitability for each travel style",
+      "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+    }
+  },
+
+  "relationships": [
+    {
+      "type": "AT",
+      "source": "Destination",
+      "cardinality": "many-to-one",
+      "properties": {
+        "distanceFromCenter": { "type": "number", "description": "km from city center" },
+        "includedInTripPlans": { "type": "integer", "description": "Popularity metric" }
+      }
+    },
+    {
+      "type": "FEATURED_IN",
+      "target": "TripPlan",
+      "cardinality": "many-to-many"
+    },
+    {
+      "type": "SUITABLE_FOR",
+      "target": "TravelStyle",
+      "cardinality": "many-to-many",
+      "properties": {
+        "suitabilityScore": { "type": "number", "minimum": 0, "maximum": 1 },
+        "reasonText": { "type": "string" },
+        "bestForGroupSize": { "type": "string", "enum": ["solo", "couple", "small_group", "large_group", "any"] },
+        "priority": { "type": "integer", "description": "Ranking within style" }
+      }
+    }
+  ],
+
+  "indexes": ["id", "type", "destination_id"],
+
+  "rls": {
+    "select": true,
+    "insert": false,
+    "update": false,
+    "delete": false
+  }
+}

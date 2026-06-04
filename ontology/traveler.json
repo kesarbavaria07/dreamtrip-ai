@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "entity": "Traveler",
+  "description": "Represents users of the DreamTrip AI platform",
+  "version": "1.0.0",
+
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for the traveler"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "User's email address for authentication"
+    },
+    "displayName": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Display name shown in the UI"
+    },
+    "avatar": {
+      "type": "string",
+      "format": "uri",
+      "description": "Profile image URL"
+    },
+    "homeCountry": {
+      "type": "string",
+      "description": "User's country of origin"
+    },
+    "loyaltyTier": {
+      "type": "string",
+      "enum": ["free", "bronze", "silver", "gold", "platinum"],
+      "description": "User membership tier"
+    },
+    "travelFrequency": {
+      "type": "string",
+      "enum": ["rare", "occasional", "regular", "frequent", "nomadic"],
+      "description": "How often the user travels"
+    },
+    "avgTripDuration": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 365,
+      "description": "Typical trip length in days"
+    },
+    "avgBudget": {
+      "type": "string",
+      "enum": ["budget", "moderate", "premium", "luxury"],
+      "description": "Typical spending level"
+    },
+    "preferredDestinations": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of destination IDs user prefers"
+    },
+    "preferredActivities": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ActivityType" },
+      "description": "Types of activities user enjoys"
+    },
+    "preferredTravelStyles": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/TravelStyle" },
+      "description": "Travel styles user prefers"
+    },
+    "dietaryRestrictions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Dietary requirements"
+    },
+    "accessibilityNeeds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Accessibility requirements"
+    },
+    "preferenceVector": {
+      "type": "array",
+      "items": { "type": "number" },
+      "description": "ML embedding for preference learning"
+    },
+    "similarityCluster": {
+      "type": "string",
+      "description": "User segmentation cluster ID"
+    }
+  },
+
+  "$defs": {
+    "ActivityType": {
+      "type": "string",
+      "enum": ["sightseeing", "dining", "adventure", "shopping", "wellness", "nightlife", "transport", "museum", "nature", "other"]
+    },
+    "TravelStyle": {
+      "type": "string",
+      "enum": ["adventure", "relaxation", "cultural", "culinary", "romantic", "family", "luxury"]
+    }
+  },
+
+  "relationships": [
+    {
+      "type": "PREFERS",
+      "target": "Destination",
+      "cardinality": "many-to-many",
+      "properties": {
+        "preferenceLevel": { "type": "number", "minimum": 0, "maximum": 1 },
+        "visitCount": { "type": "integer", "minimum": 0 },
+        "lastVisitDate": { "type": "string", "format": "date-time" },
+        "isDreamDestination": { "type": "boolean" },
+        "bucketListRank": { "type": "integer", "minimum": 1 },
+        "intentScore": { "type": "number", "minimum": 0, "maximum": 1 },
+        "seasonalPreference": { "type": "array", "items": { "type": "string" } },
+        "budgetAlignment": { "type": "string", "enum": ["budget", "moderate", "premium", "luxury"] }
+      }
+    },
+    {
+      "type": "BOOKED",
+      "target": "TripPlan",
+      "cardinality": "one-to-many"
+    },
+    {
+      "type": "CREATED",
+      "target": "TravelStory",
+      "cardinality": "one-to-many"
+    }
+  ],
+
+  "indexes": ["id", "email", "loyaltyTier"],
+
+  "rls": {
+    "select": "auth.uid() = id",
+    "update": "auth.uid() = id",
+    "delete": "auth.uid() = id"
+  }
+}

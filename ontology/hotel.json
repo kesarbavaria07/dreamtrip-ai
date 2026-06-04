@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "entity": "Hotel",
+  "description": "Represents accommodation options at destinations",
+  "version": "1.0.0",
+
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for the hotel"
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Hotel name"
+    },
+    "brand": {
+      "type": "string",
+      "description": "Hotel chain or brand"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "Hotel description"
+    },
+    "address": {
+      "type": "string",
+      "description": "Full address"
+    },
+    "city": {
+      "type": "string",
+      "description": "City location"
+    },
+    "country": {
+      "type": "string",
+      "description": "Country location"
+    },
+    "coordinates": {
+      "type": "object",
+      "properties": {
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" }
+      }
+    },
+    "neighborhood": {
+      "type": "string",
+      "description": "Neighborhood or area"
+    },
+    "starRating": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Star rating"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["hostel", "budget", "midscale", "upscale", "luxury"],
+      "description": "Hotel category"
+    },
+    "pricePerNight": {
+      "type": "object",
+      "properties": {
+        "min": { "type": "number", "minimum": 0 },
+        "max": { "type": "number", "minimum": 0 },
+        "currency": { "type": "string", "default": "USD" }
+      }
+    },
+    "avgCostForTrip": {
+      "type": "number",
+      "description": "Average cost for typical stay"
+    },
+    "amenities": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Available amenities",
+      "examples": ["wifi", "pool", "gym", "spa", "restaurant", "parking", "breakfast", "airport_shuttle"]
+    },
+    "roomTypes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "enum": ["single", "double", "twin", "suite", "family", "dorm"] },
+          "maxOccupancy": { "type": "integer" },
+          "pricePerNight": { "type": "number" }
+        }
+      }
+    },
+    "images": {
+      "type": "array",
+      "items": { "type": "string", "format": "uri" },
+      "description": "Hotel images"
+    },
+    "checkInTime": {
+      "type": "string",
+      "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+      "description": "Check-in time (HH:MM)"
+    },
+    "checkOutTime": {
+      "type": "string",
+      "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+      "description": "Check-out time (HH:MM)"
+    },
+    "cancellationPolicy": {
+      "type": "string",
+      "description": "Cancellation terms"
+    },
+    "rating": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 5,
+      "description": "Overall guest rating"
+    },
+    "reviewCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total reviews"
+    },
+    "cleanlinessScore": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "Cleanliness rating (0-10)"
+    },
+    "locationScore": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "Location rating (0-10)"
+    },
+    "valueScore": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "Value for money rating (0-10)"
+    },
+    "availabilityRate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Current availability percentage"
+    }
+  },
+
+  "relationships": [
+    {
+      "type": "LOCATED_AT",
+      "source": "Destination",
+      "cardinality": "many-to-one",
+      "properties": {
+        "distanceFromCenter": { "type": "number", "description": "km from center" },
+        "isInNeighborhood": { "type": "string" }
+      }
+    },
+    {
+      "type": "BOOKED_IN",
+      "target": "TripPlan",
+      "cardinality": "many-to-many"
+    },
+    {
+      "type": "RATED_BY",
+      "target": "Traveler",
+      "cardinality": "many-to-many",
+      "properties": {
+        "rating": { "type": "number", "minimum": 1, "maximum": 5 },
+        "reviewText": { "type": "string" },
+        "reviewDate": { "type": "string", "format": "date-time" }
+      }
+    }
+  ],
+
+  "indexes": ["id", "destination_id", "category", "pricePerNight.min", "rating"],
+
+  "rls": {
+    "select": true,
+    "insert": false,
+    "update": false,
+    "delete": false
+  }
+}
