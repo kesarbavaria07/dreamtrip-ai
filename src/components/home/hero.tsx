@@ -1,8 +1,16 @@
 "use client";
 
 import Button from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function Hero() {
+  const router = useRouter();
+
+  const handleStartPlanning = () => {
+    console.log("[Hero] Navigating to planner page...");
+    router.push("/planner");
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Gradient Orbs */}
@@ -47,7 +55,7 @@ export default function Hero() {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-          <Button size="lg" className="group">
+          <Button size="lg" className="group" onClick={handleStartPlanning}>
             <span>Start Planning Free</span>
             <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
