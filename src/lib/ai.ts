@@ -384,7 +384,7 @@ function calculateBudget(
     },
     remaining: total,
     alerts: [
-      { type: "info", category: "budget", message: `Budget range: $${range.min.toLocaleString()} - $${range.max.toLocaleString()}` },
+      { type: "tip", category: "budget", message: `Budget range: $${range.min.toLocaleString()} - $${range.max.toLocaleString()}` },
       { type: "tip", category: "food", message: "Consider local eateries to save 20% on meals" },
       { type: "tip", category: "transport", message: "Get a day pass for public transit to save money" },
     ],

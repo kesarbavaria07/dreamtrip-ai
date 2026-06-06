@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import TripPlannerForm, { type TripPlannerFormData } from "@/components/ui/trip-planner-form";
 import TravelPoster from "@/components/stories/travel-poster";
 import Navbar from "@/components/home/navbar";
@@ -39,10 +41,36 @@ type LoadingState = {
 };
 
 export default function PlannerPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [tripPlan, setTripPlan] = useState<TripPlan | null>(null);
   const [activeTab, setActiveTab] = useState<"itinerary" | "budget" | "poster">("itinerary");
   const [loading, setLoading] = useState<LoadingState>({ isLoading: false, step: "" });
   const [error, setError] = useState<string | null>(null);
+
+  // Protect route - redirect to sign in if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/sign-in?callbackUrl=/planner");
+    }
+  }, [status, router]);
+
+  // Show loading while checking auth
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-white/60">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (status === "unauthenticated") {
+    return null;
+  }
 
   const handleFormSubmit = async (data: TripPlannerFormData) => {
     console.log("[Planner] Form submitted:", data);

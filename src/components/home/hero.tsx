@@ -2,13 +2,18 @@
 
 import Button from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function Hero() {
   const router = useRouter();
+  const { data: session } = useSession();
 
   const handleStartPlanning = () => {
-    console.log("[Hero] Navigating to planner page...");
-    router.push("/planner");
+    if (session) {
+      router.push("/planner");
+    } else {
+      router.push("/sign-up?callbackUrl=/planner");
+    }
   };
 
   return (

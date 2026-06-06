@@ -2,11 +2,15 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Button from "@/components/ui/button";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -15,11 +19,27 @@ export default function Navbar() {
   }, []);
 
   const navLinks = [
-    { label: "Destinations", href: "#destinations" },
-    { label: "How it Works", href: "#how-it-works" },
-    { label: "Features", href: "#features" },
-    { label: "Pricing", href: "#pricing" }
+    { label: "Destinations", href: "/#destinations" },
+    { label: "How it Works", href: "/#how-it-works" },
+    { label: "Features", href: "/#features" },
+    { label: "Pricing", href: "/#pricing" }
   ];
+
+  const handleGetStarted = () => {
+    if (session) {
+      router.push("/planner");
+    } else {
+      router.push("/sign-up?callbackUrl=/planner");
+    }
+  };
+
+  const handleSignIn = () => {
+    router.push("/sign-in?callbackUrl=/planner");
+  };
+
+  const handleSignOut = () => {
+    signOut({ callbackUrl: "/" });
+  };
 
   return (
     <nav
@@ -46,24 +66,40 @@ export default function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
-              <Link
+              <a
                 key={link.label}
                 href={link.href}
                 className="text-sm font-medium text-white/70 hover:text-white transition-colors"
               >
                 {link.label}
-              </Link>
+              </a>
             ))}
           </div>
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="ghost" size="sm">
-              Sign In
-            </Button>
-            <Button variant="primary" size="sm">
-              Get Started
-            </Button>
+            {session ? (
+              <>
+                <span className="text-sm text-white/70">
+                  Hello, {session.user?.name?.split(" ")[0] || "Traveler"}
+                </span>
+                <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                  Sign Out
+                </Button>
+                <Button variant="primary" size="sm" onClick={() => router.push("/planner")}>
+                  My Trips
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" onClick={handleSignIn}>
+                  Sign In
+                </Button>
+                <Button variant="primary" size="sm" onClick={handleGetStarted}>
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -86,22 +122,36 @@ export default function Navbar() {
           <div className="md:hidden mt-4 pb-4 border-t border-white/10">
             <div className="flex flex-col gap-4 pt-4">
               {navLinks.map((link) => (
-                <Link
+                <a
                   key={link.label}
                   href={link.href}
                   className="text-white/70 hover:text-white transition-colors"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {link.label}
-                </Link>
+                </a>
               ))}
               <div className="flex flex-col gap-3 pt-4 border-t border-white/10">
-                <Button variant="ghost" size="md" className="w-full">
-                  Sign In
-                </Button>
-                <Button variant="primary" size="md" className="w-full">
-                  Get Started
-                </Button>
+                {session ? (
+                  <>
+                    <span className="text-sm text-white/50">Signed in as {session.user?.name}</span>
+                    <Button variant="ghost" size="md" className="w-full" onClick={handleSignOut}>
+                      Sign Out
+                    </Button>
+                    <Button variant="primary" size="md" className="w-full" onClick={() => router.push("/planner")}>
+                      My Trips
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="ghost" size="md" className="w-full" onClick={handleSignIn}>
+                      Sign In
+                    </Button>
+                    <Button variant="primary" size="md" className="w-full" onClick={handleGetStarted}>
+                      Get Started
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
