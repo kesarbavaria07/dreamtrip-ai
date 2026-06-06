@@ -90,8 +90,6 @@ export default function TripPlannerForm({
     }
   };
 
-  const durationValue = watch("duration");
-
   return (
     <form
       onSubmit={handleSubmit(handleFormSubmit)}
@@ -186,21 +184,15 @@ export default function TripPlannerForm({
         <label htmlFor="duration" className="block text-sm font-medium text-white/80">
           Trip Duration (Days)
         </label>
-        <div className="flex items-center gap-4">
-          <input
-            id="duration"
-            type="range"
-            min="1"
-            max="30"
-            step="1"
-            {...register("duration", { valueAsNumber: true })}
-            className="flex-1 h-2 bg-white/10 rounded-full appearance-none cursor-pointer accent-indigo-500"
-          />
-          <div className="flex items-center justify-center w-20 h-12 bg-white/5 border border-white/10 rounded-xl">
-            <span className="text-white font-medium">{durationValue} days</span>
-          </div>
-        </div>
-        <input type="hidden" {...register("duration", { valueAsNumber: true })} />
+        <input
+          id="duration"
+          type="number"
+          min="1"
+          max="30"
+          {...register("duration", { valueAsNumber: true })}
+          className="w-full h-14 px-4 bg-white/5 border border-white/10 rounded-xl text-white text-lg text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+          placeholder="Enter days (1-30)"
+        />
         {errors.duration && (
           <p className="text-red-400 text-sm">{errors.duration.message}</p>
         )}

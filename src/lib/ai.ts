@@ -39,17 +39,23 @@ export interface GenerateTripPlanOutput {
 }
 
 // -----------------------------
-// Budget Mapping
+// Budget Mapping (Ranges)
 // -----------------------------
 
-const BUDGET_AMOUNTS: Record<BudgetLevel, number> = {
-  budget: 1500,
-  moderate: 3000,
-  premium: 5000,
-  luxury: 10000,
+const BUDGET_RANGES: Record<BudgetLevel, { min: number; max: number }> = {
+  budget: { min: 500, max: 1500 },
+  moderate: { min: 1500, max: 3000 },
+  premium: { min: 3000, max: 5000 },
+  luxury: { min: 5000, max: 10000 },
 };
 
 const BUDGET_CURRENCY = "USD";
+
+// Helper function to get random budget within range
+function getRandomBudgetInRange(budget: BudgetLevel): number {
+  const range = BUDGET_RANGES[budget];
+  return Math.round(Math.random() * (range.max - range.min) + range.min);
+}
 
 // -----------------------------
 // Mock Destinations
@@ -361,8 +367,9 @@ function calculateBudget(
   budgetLevel: BudgetLevel,
   duration: number
 ): TripBudget {
-  const total = BUDGET_AMOUNTS[budgetLevel];
-  const dailyBudget = total / duration;
+  // Get random budget within the range for this budget level
+  const total = getRandomBudgetInRange(budgetLevel);
+  const range = BUDGET_RANGES[budgetLevel];
 
   return {
     total,
@@ -377,6 +384,7 @@ function calculateBudget(
     },
     remaining: total,
     alerts: [
+      { type: "info", category: "budget", message: `Budget range: $${range.min.toLocaleString()} - $${range.max.toLocaleString()}` },
       { type: "tip", category: "food", message: "Consider local eateries to save 20% on meals" },
       { type: "tip", category: "transport", message: "Get a day pass for public transit to save money" },
     ],
